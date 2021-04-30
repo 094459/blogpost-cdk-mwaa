@@ -1,7 +1,0 @@
-README.md
-setup.py
-mwaa_cdk/mwaa_cdk.egg-info/PKG-INFO
-mwaa_cdk/mwaa_cdk.egg-info/SOURCES.txt
-mwaa_cdk/mwaa_cdk.egg-info/dependency_links.txt
-mwaa_cdk/mwaa_cdk.egg-info/requires.txt
-mwaa_cdk/mwaa_cdk.egg-info/top_level.txt
