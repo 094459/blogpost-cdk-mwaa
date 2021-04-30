@@ -4,4 +4,4 @@ aws-cdk.aws-s3
 aws-cdk.aws-s3-deployment
 aws-cdk.aws-mwaa
 aws-cdk.core
-
+aws_cdk.aws-kms

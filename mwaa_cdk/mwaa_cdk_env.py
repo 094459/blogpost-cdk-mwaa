@@ -4,6 +4,7 @@ import aws_cdk.aws_s3 as s3
 import aws_cdk.aws_s3_deployment as s3deploy
 import aws_cdk.aws_mwaa as mwaa
 import aws_cdk.aws_iam as iam
+import aws_cdk.aws_kms as kms
 
 
 class MwaaCdkStackEnv(core.Stack):
@@ -144,7 +145,7 @@ class MwaaCdkStackEnv(core.Stack):
             subnet_ids=subnets,
         )
 
-        # Configure specific MWAA settings - you can externalise these if you want
+        # **OPTIONAL** Configure specific MWAA settings - you can externalise these if you want
 
         logging_configuration = mwaa.CfnEnvironment.LoggingConfigurationProperty(
             task_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
@@ -165,6 +166,11 @@ class MwaaCdkStackEnv(core.Stack):
             'env': f"{mwaa_props['mwaa_env']}",
             'service': 'MWAA Apache AirFlow'
         }
+
+        # **OPTIONAL** Create KMS key that MWAA will use for encryption
+
+        key = kms.Key(self, f"{mwaa_props['mwaa_env']}Key", enable_key_rotation=True)
+        key.add_alias(f"alias/{mwaa_props['mwaa_env']}")        
         
         # Create MWAA environment using all the info above
 
@@ -177,7 +183,7 @@ class MwaaCdkStackEnv(core.Stack):
             dag_s3_path="dags",
             environment_class='mw1.small',
             execution_role_arn=mwaa_service_role.role_arn,
-            #kms_key=key.key_id,
+            kms_key=key.key_id,
             logging_configuration=logging_configuration,
             max_workers=5,
             network_configuration=network_configuration,
