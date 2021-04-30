@@ -197,7 +197,7 @@ class MwaaCdkStackEnv(core.Stack):
             self,
             id="MWAASecurityGroup",
             value=security_group_id,
-            description="VPC ID for MWAA"
+            description="Security Group name used by MWAA"
         )
 
 
