@@ -99,6 +99,7 @@ class MwaaCdkStackEnv(core.Stack):
                         "kms:DescribeKey",
                         "kms:GenerateDataKey*",
                         "kms:Encrypt",
+                        "kms:PutKeyPolicy"
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=["*"],
@@ -178,7 +179,8 @@ class MwaaCdkStackEnv(core.Stack):
                         "kms:Describe*",
                         "kms:GenerateDataKey*",
                         "kms:Encrypt*",
-                        "kms:ReEncrypt*"
+                        "kms:ReEncrypt*",
+                        "kms:PutKeyPolicy"
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=["*"],
