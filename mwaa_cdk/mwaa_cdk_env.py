@@ -11,8 +11,8 @@ class MwaaCdkStackEnv(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, vpc, mwaa_props,  **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-       
-        # Create MWAA S3 Bucket and upload local dags 
+
+        # Create MWAA S3 Bucket and upload local dags
 
         dags_bucket = s3.Bucket(
             self,
@@ -29,7 +29,7 @@ class MwaaCdkStackEnv(core.Stack):
         prune=False,
         retain_on_delete=False
         )
-        
+
         dags_bucket_arn = dags_bucket.bucket_arn
 
         # Create MWAA IAM Policies and Roles, copied from MWAA documentation site
@@ -137,7 +137,7 @@ class MwaaCdkStackEnv(core.Stack):
         )
 
         security_group_id = security_group.security_group_id
-        
+
         security_group.connections.allow_internally(ec2.Port.all_traffic(),"MWAA")
 
         subnets = [subnet.subnet_id for subnet in vpc.private_subnets]
@@ -170,9 +170,18 @@ class MwaaCdkStackEnv(core.Stack):
 
         # **OPTIONAL** Create KMS key that MWAA will use for encryption
 
-
         kms_mwaa_policy_document = iam.PolicyDocument(
             statements=[
+                iam.PolicyStatement(
+                    actions=[
+                         "kms:Create*", "kms:Describe*", "kms:Enable*", "kms:List*", "kms:Put*"
+                    ],
+                    principals=[
+                        iam.AccountRootPrincipal(),
+                        # Optional:
+                        # iam.ArnPrincipal(f"arn:aws:sts::{self.account}:assumed-role/AWSReservedSSO_rest_of_SSO_account"),
+                    ],
+                    resources=["*"]),
                 iam.PolicyStatement(
                     actions=[
                         "kms:Decrypt*",
@@ -184,8 +193,8 @@ class MwaaCdkStackEnv(core.Stack):
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=["*"],
-                    principals=[iam.ServicePrincipal("logs.amazonaws.com",region=f"{self.region}")],
-                    conditions={"ArnLike": { "kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:*" }},
+                    principals=[iam.ServicePrincipal("logs.amazonaws.com", region=f"{self.region}")],
+                    conditions={"ArnLike": {"kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:*"}},
                 ),
             ]
         )
@@ -198,9 +207,9 @@ class MwaaCdkStackEnv(core.Stack):
             enable_key_rotation=True,
             policy=kms_mwaa_policy_document
         )
-        
-        key.add_alias(f"alias/{mwaa_props['mwaa_env']}")        
-        
+
+        key.add_alias(f"alias/{mwaa_props['mwaa_env']}")
+
         # Create MWAA environment using all the info above
 
         managed_airflow = mwaa.CfnEnvironment(
