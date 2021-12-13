@@ -169,7 +169,34 @@ class MwaaCdkStackEnv(core.Stack):
 
         # **OPTIONAL** Create KMS key that MWAA will use for encryption
 
-        key = kms.Key(self, f"{mwaa_props['mwaa_env']}Key", enable_key_rotation=True)
+
+        kms_mwaa_policy_document = iam.PolicyDocument(
+            statements=[
+                iam.PolicyStatement(
+                    actions=[
+                        "kms:Decrypt*",
+                        "kms:Describe*",
+                        "kms:GenerateDataKey*",
+                        "kms:Encrypt*",
+                        "kms:ReEncrypt*"
+                    ],
+                    effect=iam.Effect.ALLOW,
+                    resources=["*"],
+                    principals=[iam.ServicePrincipal("logs.amazonaws.com",region=f"{self.region}")],
+                    conditions={"ArnLike": { "kms:EncryptionContext:aws:logs:arn": f"arn:aws:logs:{self.region}:{self.account}:*" }},
+                ),
+            ]
+        )
+
+
+
+        key = kms.Key(
+            self,
+            f"{mwaa_props['mwaa_env']}Key",
+            enable_key_rotation=True,
+            policy=kms_mwaa_policy_document
+        )
+        
         key.add_alias(f"alias/{mwaa_props['mwaa_env']}")        
         
         # Create MWAA environment using all the info above
@@ -205,9 +232,3 @@ class MwaaCdkStackEnv(core.Stack):
             value=security_group_id,
             description="Security Group name used by MWAA"
         )
-
-
-    
-
-
-
