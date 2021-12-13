@@ -217,7 +217,7 @@ class MwaaCdkStackEnv(core.Stack):
             id='airflow-test-environment',
             name=f"{mwaa_props['mwaa_env']}",
             airflow_configuration_options={'core.default_timezone': 'utc'},
-            airflow_version='1.10.12',
+            airflow_version='2.0.2',
             dag_s3_path="dags",
             environment_class='mw1.small',
             execution_role_arn=mwaa_service_role.role_arn,
