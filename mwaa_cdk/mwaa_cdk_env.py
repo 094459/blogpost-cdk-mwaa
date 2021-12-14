@@ -35,6 +35,7 @@ class MwaaCdkStackEnv(core.Stack):
         dags_bucket_arn = dags_bucket.bucket_arn
 
         # Create MWAA IAM Policies and Roles, copied from MWAA documentation site
+        # After destroy remove cloudwatch log groups, S3 bucket and verify KMS key is removed.
 
         mwaa_policy_document = iam.PolicyDocument(
             statements=[
@@ -71,7 +72,8 @@ class MwaaCdkStackEnv(core.Stack):
                         "logs:GetLogEvents",
                         "logs:GetLogRecord",
                         "logs:GetLogGroupFields",
-                        "logs:GetQueryResults"
+                        "logs:GetQueryResults",
+                        "logs:DescribeLogGroups"
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[f"arn:aws:logs:{self.region}:{self.account}:log-group:airflow-{mwaa_props['mwaa_env']}-*"],
@@ -151,12 +153,27 @@ class MwaaCdkStackEnv(core.Stack):
         # **OPTIONAL** Configure specific MWAA settings - you can externalise these if you want
 
         logging_configuration = mwaa.CfnEnvironment.LoggingConfigurationProperty(
-            task_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            worker_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            scheduler_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            dag_processing_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            webserver_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO")
+            dag_processing_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            task_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            worker_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            scheduler_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            webserver_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
             )
+        )
 
         options = {
             'core.load_default_connections': False,
