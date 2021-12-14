@@ -1,4 +1,5 @@
 from aws_cdk import core
+from aws_cdk.core import Tags
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_s3 as s3
 import aws_cdk.aws_s3_deployment as s3deploy
@@ -16,6 +17,11 @@ class MwaaCdkStackEnv(core.Stack):
 
         # Create MWAA S3 Bucket and upload local dags
 
+        s3_tags = {
+            'env': f"{mwaa_props['mwaa_env']}",
+            'service': 'MWAA Apache AirFlow'
+        }
+
         dags_bucket = s3.Bucket(
             self,
             "mwaa-dags",
@@ -23,6 +29,9 @@ class MwaaCdkStackEnv(core.Stack):
             versioned=True,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL
         )
+
+        for tag in s3_tags:
+            Tags.of(dags_bucket).add(tag, s3_tags[tag])
 
         s3deploy.BucketDeployment(self, "DeployDAG",
         sources=[s3deploy.Source.asset("./dags")],
