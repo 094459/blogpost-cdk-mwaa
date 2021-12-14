@@ -1,4 +1,5 @@
 from aws_cdk import core
+from aws_cdk.core import Tags
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_s3 as s3
 import aws_cdk.aws_s3_deployment as s3deploy
@@ -16,6 +17,11 @@ class MwaaCdkStackEnv(core.Stack):
 
         # Create MWAA S3 Bucket and upload local dags
 
+        s3_tags = {
+            'env': f"{mwaa_props['mwaa_env']}",
+            'service': 'MWAA Apache AirFlow'
+        }
+
         dags_bucket = s3.Bucket(
             self,
             "mwaa-dags",
@@ -23,6 +29,9 @@ class MwaaCdkStackEnv(core.Stack):
             versioned=True,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL
         )
+
+        for tag in s3_tags:
+            Tags.of(dags_bucket).add(tag, s3_tags[tag])
 
         s3deploy.BucketDeployment(self, "DeployDAG",
         sources=[s3deploy.Source.asset("./dags")],
@@ -35,6 +44,7 @@ class MwaaCdkStackEnv(core.Stack):
         dags_bucket_arn = dags_bucket.bucket_arn
 
         # Create MWAA IAM Policies and Roles, copied from MWAA documentation site
+        # After destroy remove cloudwatch log groups, S3 bucket and verify KMS key is removed.
 
         mwaa_policy_document = iam.PolicyDocument(
             statements=[
@@ -71,7 +81,8 @@ class MwaaCdkStackEnv(core.Stack):
                         "logs:GetLogEvents",
                         "logs:GetLogRecord",
                         "logs:GetLogGroupFields",
-                        "logs:GetQueryResults"
+                        "logs:GetQueryResults",
+                        "logs:DescribeLogGroups"
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[f"arn:aws:logs:{self.region}:{self.account}:log-group:airflow-{mwaa_props['mwaa_env']}-*"],
@@ -151,12 +162,27 @@ class MwaaCdkStackEnv(core.Stack):
         # **OPTIONAL** Configure specific MWAA settings - you can externalise these if you want
 
         logging_configuration = mwaa.CfnEnvironment.LoggingConfigurationProperty(
-            task_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            worker_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            scheduler_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            dag_processing_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO"),
-            webserver_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(enabled=True, log_level="INFO")
+            dag_processing_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            task_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            worker_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            scheduler_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
+            ),
+            webserver_logs=mwaa.CfnEnvironment.ModuleLoggingConfigurationProperty(
+                enabled=True,
+                log_level="INFO"
             )
+        )
 
         options = {
             'core.load_default_connections': False,
@@ -188,6 +214,7 @@ class MwaaCdkStackEnv(core.Stack):
                         "kms:Get*",
                         "kms:Delete*",
                         "kms:ScheduleKeyDeletion",
+                        "kms:GenerateDataKey*",
                         "kms:CancelKeyDeletion"
                     ],
                     principals=[
