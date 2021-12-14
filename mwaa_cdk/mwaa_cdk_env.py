@@ -205,6 +205,7 @@ class MwaaCdkStackEnv(core.Stack):
                         "kms:Get*",
                         "kms:Delete*",
                         "kms:ScheduleKeyDeletion",
+                        "kms:GenerateDataKey*",
                         "kms:CancelKeyDeletion"
                     ],
                     principals=[
