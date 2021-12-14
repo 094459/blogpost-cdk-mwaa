@@ -12,6 +12,8 @@ class MwaaCdkStackEnv(core.Stack):
     def __init__(self, scope: core.Construct, id: str, vpc, mwaa_props,  **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
+        key_suffix = 'Key'
+
         # Create MWAA S3 Bucket and upload local dags
 
         dags_bucket = s3.Bucket(
@@ -174,7 +176,19 @@ class MwaaCdkStackEnv(core.Stack):
             statements=[
                 iam.PolicyStatement(
                     actions=[
-                         "kms:Create*", "kms:Describe*", "kms:Enable*", "kms:List*", "kms:Put*", "kms:Decrypt*"
+                        "kms:Create*",
+                        "kms:Describe*",
+                        "kms:Enable*",
+                        "kms:List*",
+                        "kms:Put*",
+                        "kms:Decrypt*",
+                        "kms:Update*",
+                        "kms:Revoke*",
+                        "kms:Disable*",
+                        "kms:Get*",
+                        "kms:Delete*",
+                        "kms:ScheduleKeyDeletion",
+                        "kms:CancelKeyDeletion"
                     ],
                     principals=[
                         iam.AccountRootPrincipal(),
@@ -203,12 +217,12 @@ class MwaaCdkStackEnv(core.Stack):
 
         key = kms.Key(
             self,
-            f"{mwaa_props['mwaa_env']}Key",
+            f"{mwaa_props['mwaa_env']}{key_suffix}",
             enable_key_rotation=True,
             policy=kms_mwaa_policy_document
         )
 
-        key.add_alias(f"alias/{mwaa_props['mwaa_env']}")
+        key.add_alias(f"alias/{mwaa_props['mwaa_env']}{key_suffix}")
 
         # Create MWAA environment using all the info above
 
