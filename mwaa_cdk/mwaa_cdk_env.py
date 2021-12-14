@@ -174,7 +174,7 @@ class MwaaCdkStackEnv(core.Stack):
             statements=[
                 iam.PolicyStatement(
                     actions=[
-                         "kms:Create*", "kms:Describe*", "kms:Enable*", "kms:List*", "kms:Put*"
+                         "kms:Create*", "kms:Describe*", "kms:Enable*", "kms:List*", "kms:Put*", "kms:Decrypt*"
                     ],
                     principals=[
                         iam.AccountRootPrincipal(),
@@ -217,11 +217,11 @@ class MwaaCdkStackEnv(core.Stack):
             id='airflow-test-environment',
             name=f"{mwaa_props['mwaa_env']}",
             airflow_configuration_options={'core.default_timezone': 'utc'},
-            airflow_version='1.10.12',
+            airflow_version='2.0.2',
             dag_s3_path="dags",
             environment_class='mw1.small',
             execution_role_arn=mwaa_service_role.role_arn,
-            kms_key=key.key_id,
+            kms_key=key.key_arn,
             logging_configuration=logging_configuration,
             max_workers=5,
             network_configuration=network_configuration,
